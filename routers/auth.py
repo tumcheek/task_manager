@@ -2,7 +2,8 @@ from typing import Annotated
 
 from fastapi import APIRouter
 from fastapi import Depends, HTTPException, status
-from core.config import DATABASE_URL, SESSION
+from sqlalchemy.exc import IntegrityError
+from core.config import SESSION
 from core.database import get_db
 from core.auth import create_access_token, get_current_user
 from services.auth import create_user, authenticate_user
@@ -11,18 +12,16 @@ from shemas.user import UserCreate, User, Token, UserLogin
 router = APIRouter()
 
 
-@router.get('/users/')
-def get_users():
-    return {'users': "DATABASE_URL"}
-
-
 @router.post('/users/')
 def register_user(user_data: UserCreate, db: Annotated[SESSION, Depends(get_db)]) -> User:
-    user = create_user(db, user_data)
+    try:
+        user = create_user(db, user_data)
+    except IntegrityError as e:
+        raise HTTPException(status_code=400, detail=e.statement)
     return User(id=user.id, email=user.email)
 
 
-@router.post("/token")
+@router.post("/token/")
 async def login(user_info: UserLogin, db: Annotated[SESSION, Depends(get_db)]) -> Token:
     user = authenticate_user(db, user_info.email, user_info.password)
     if not user:
