@@ -5,6 +5,7 @@ from sqlalchemy.orm import mapped_column, Mapped, relationship
 from sqlalchemy import String, Enum, DateTime, ForeignKey
 
 from models.base import Base
+from models.tag import task_tag_association_table
 
 
 class TaskStatus(enum.Enum):
@@ -34,3 +35,7 @@ class Task(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now)
 
     owner: Mapped["User"] = relationship(back_populates="tasks")
+    tags: Mapped[list["Tag"]] = relationship(
+        secondary=task_tag_association_table,
+        back_populates="tasks"
+    )

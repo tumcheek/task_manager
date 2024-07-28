@@ -16,3 +16,4 @@ class User(Base):
     password: Mapped[str] = mapped_column(String, nullable=False)
 
     tasks: Mapped[List["Task"]] = relationship(back_populates="owner")
+    tags: Mapped[List["Tag"]] = relationship(back_populates="owner")
