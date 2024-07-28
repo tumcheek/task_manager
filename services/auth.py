@@ -18,9 +18,12 @@ def create_user(db: SESSION, user_info: UserCreate) -> User:
         db.add(user)
         db.commit()
         db.refresh(user)
-    except IntegrityError:
+    except IntegrityError as e:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise IntegrityError(statement="Email already registered",
+                             params=e.params,
+                             orig=e.orig
+                             )
 
     return user
 
