@@ -9,7 +9,7 @@ from core.auth import create_access_token, get_current_user
 from services.auth import create_user, authenticate_user
 from shemas.user import UserCreate, User, Token, UserLogin
 
-router = APIRouter()
+router = APIRouter(tags=['users'])
 
 
 @router.post('/users/')

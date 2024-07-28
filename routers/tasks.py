@@ -13,7 +13,7 @@ from shemas.task import TaskCreate
 from shemas.user import User
 
 
-router = APIRouter()
+router = APIRouter(tags=["tasks"])
 
 
 @router.get("/tasks/")
