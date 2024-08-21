@@ -12,6 +12,13 @@ def get_user_tasks_list(db: Session, user_id: int) -> List[Task]:
     return tasks
 
 
+def get_user_task_detail(db: Session, user_id: int, task_id: int) -> Task:
+    task = db.query(Task).filter(Task.id == task_id, Task.owner_id == user_id).first()
+    if not task:
+        raise TaskNotFoundError()
+    return task
+
+
 def create_task(db: Session, task_info: TaskCreate, user_id: int) -> Task:
     task_data = task_info.dict()
     task = Task(**task_data, owner_id=user_id)
@@ -40,7 +47,7 @@ def update_task(db: Session, task_info: TaskCreate, task_id: int, user_id: int) 
     return updated_task
 
 
-def delete_task(db: Session, task_id: int, user_id: int) -> Task:
+def delete_task(db: Session, task_id: int, user_id: int) -> bool:
     task = db.query(Task).filter(Task.id == task_id, Task.owner_id == user_id)
     if not task.first():
         raise TaskNotFoundError()
