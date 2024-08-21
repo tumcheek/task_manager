@@ -7,7 +7,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError, ExpiredSignatureError
 from starlette.requests import Request
 
-from core.config import SECRET_KEY, ALGORITHM, SESSION
+from core.config import SECRET_KEY, ALGORITHM, SESSION, ACCESS_TOKEN_EXPIRE_MINUTES
 from core.database import get_db
 
 from services.auth import get_user
@@ -45,7 +45,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
