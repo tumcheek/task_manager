@@ -10,4 +10,4 @@ api_router.include_router(tags.router)
 app = FastAPI()
 
 
-app.include_router(api_router)
+app.include_router(api_router, prefix="/api/v1")
