@@ -5,7 +5,7 @@ from typing import List, Annotated
 from core.database import get_db
 from models import User
 from services.exeptions import TaskNotFoundError, TagNotAssociatedError, TagNotFoundError, TagAlreadyExistsError
-from shemas.tags import Tag
+from shemas.tags import Tag, TagCreate
 
 from services import tags
 from .auth import get_current_user
@@ -24,7 +24,7 @@ def get_user_tags(
 @router.post("/tasks/{task_id}", response_model=Tag)
 def create_tag_for_task(
     task_id: int,
-    tag: Tag,
+    tag: TagCreate,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Session = Depends(get_db)
 ):
