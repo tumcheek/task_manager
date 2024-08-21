@@ -7,14 +7,16 @@ from models.task import TaskStatus, TaskPriority
 
 
 class Task(BaseModel):
-    task_id: int
+    model_config = ConfigDict(from_attributes=True)
+    id: int
     title: str
     description: str
     status: str
     priority: str
-    due_date: str
-    created_at: str
-    updated_at: str
+    owner_id: int
+    due_date: datetime
+    created_at: datetime
+    updated_at: datetime
 
 
 class TaskCreate(BaseModel):
