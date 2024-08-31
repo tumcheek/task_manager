@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 from core.config import SESSION
 from core.security import get_password_hash, verify_password
 from models import User
-from shemas.user import UserCreate
+from schemas.user import UserCreate
 
 
 def create_user(db: SESSION, user_info: UserCreate) -> User:

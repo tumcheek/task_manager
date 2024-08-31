@@ -5,7 +5,7 @@ from typing import List, Annotated
 from core.database import get_db
 from models import User
 from services.exeptions import TaskNotFoundError, TagNotAssociatedError, TagNotFoundError, TagAlreadyExistsError
-from shemas.tags import Tag, TagCreate
+from schemas.tags import Tag, TagCreate
 
 from services import tags
 from .auth import get_current_user

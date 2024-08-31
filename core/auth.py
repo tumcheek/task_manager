@@ -11,7 +11,7 @@ from core.config import SECRET_KEY, ALGORITHM, SESSION, ACCESS_TOKEN_EXPIRE_MINU
 from core.database import get_db
 
 from services.auth import get_user
-from shemas.user import TokenData
+from schemas.user import TokenData
 
 
 class JWTBearer(HTTPBearer):

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from models import Task
 from services.exeptions import TaskNotFoundError
-from shemas.task import TaskCreate
+from schemas.task import TaskCreate
 
 
 def get_user_tasks_list(db: Session, user_id: int) -> List[Task]:

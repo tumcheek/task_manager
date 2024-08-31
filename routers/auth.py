@@ -7,7 +7,7 @@ from core.config import SESSION
 from core.database import get_db
 from core.auth import create_access_token, get_current_user
 from services.auth import create_user, authenticate_user
-from shemas.user import UserCreate, User, Token, UserLogin
+from schemas.user import UserCreate, User, Token, UserLogin
 
 router = APIRouter(tags=['users'])
 

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from models import Task, Tag
 from services.exeptions import TaskNotFoundError, TagNotFoundError, TagNotAssociatedError, TagAlreadyExistsError
-from shemas import tags
+from schemas import tags
 
 
 def get_user_tags(db: Session, user_id: int) -> List[Tag]:

@@ -9,8 +9,8 @@ from core.database import get_db
 from core.auth import get_current_user
 from services.exeptions import TaskNotFoundError
 from services.tasks import get_user_tasks_list, create_task, update_task, delete_task, get_user_task_detail
-from shemas.task import TaskCreate, Task
-from shemas.user import User
+from schemas.task import TaskCreate, Task
+from schemas.user import User
 
 
 router = APIRouter(tags=["tasks"])
