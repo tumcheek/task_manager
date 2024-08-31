@@ -1,4 +1,3 @@
-from fastapi import HTTPException
 from pydantic import EmailStr
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, NoResultFound
