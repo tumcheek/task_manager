@@ -20,3 +20,5 @@ SESSION = sessionmaker(autocommit=False, autoflush=False, bind=ENGINE)
 SECRET_KEY = os.getenv('SECRET_KEY')
 ALGORITHM = os.getenv('ALGORITHM')
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+TEST_DATABASE_URL = 'sqlite:///:memory:'
