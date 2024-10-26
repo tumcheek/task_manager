@@ -2,7 +2,7 @@ from pydantic import EmailStr
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, NoResultFound
 
-from core.config import SESSION
+from core.database import SESSION
 from core.security import get_password_hash, verify_password
 from models import User
 from schemas.user import UserCreate

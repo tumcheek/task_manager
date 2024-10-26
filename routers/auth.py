@@ -3,8 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
-from core.config import SESSION
-from core.database import get_db
+from core.database import get_db, SESSION
 from core.auth import create_access_token, get_current_user
 from services.auth import create_user, authenticate_user
 from schemas.user import UserCreate, User, Token, UserLogin
