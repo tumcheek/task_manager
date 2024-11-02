@@ -12,9 +12,9 @@ class Task(BaseModel):
     title: str
     description: str
     status: str
-    priority: str
+    priority: str | None
     owner_id: int
-    due_date: datetime
+    due_date: datetime | None
     created_at: datetime
     updated_at: datetime
 
