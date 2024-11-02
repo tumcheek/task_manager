@@ -7,8 +7,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt import InvalidTokenError, ExpiredSignatureError
 from starlette.requests import Request
 
-from core.config import SECRET_KEY, ALGORITHM, SESSION, ACCESS_TOKEN_EXPIRE_MINUTES
-from core.database import get_db
+from core.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from core.database import get_db, SESSION
 
 from services.auth import get_user
 from schemas.user import TokenData
