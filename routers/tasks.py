@@ -8,7 +8,8 @@ from sqlalchemy.exc import IntegrityError
 from core.database import get_db
 from core.auth import get_current_user
 from services.exeptions import TaskNotFoundError
-from services.tasks import get_user_tasks_list, create_task, update_task, delete_task, get_user_task_detail
+from services.tasks import (get_user_tasks_list, create_task, update_task,
+                            delete_task, get_user_task_detail)
 from schemas.task import TaskCreate, Task
 from schemas.user import User
 
@@ -17,7 +18,8 @@ router = APIRouter(tags=["tasks"])
 
 
 @router.get("/tasks/")
-def get_user_tasks(current_user: Annotated[User, Depends(get_current_user)], db: Session = Depends(get_db)):
+def get_user_tasks(current_user: Annotated[User, Depends(get_current_user)],
+                   db: Session = Depends(get_db)):
     tasks = get_user_tasks_list(db, current_user.id)
     return tasks
 
@@ -59,7 +61,7 @@ def update_user_task(task_id: int,
 @router.delete("/tasks/{task_id}/", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user_task(task_id: int,
                      current_user: Annotated[User, Depends(get_current_user)],
-                     db: Session = Depends(get_db)) :
+                     db: Session = Depends(get_db)):
     try:
         delete_task(db, task_id,  current_user.id)
     except TaskNotFoundError as e:

@@ -13,7 +13,9 @@ def get_user_tasks_list(db: Session, user_id: int) -> List[Task]:
 
 
 def get_user_task_detail(db: Session, user_id: int, task_id: int) -> Task:
-    task = db.query(Task).filter(Task.id == task_id, Task.owner_id == user_id).first()
+    task = db.query(Task).filter(
+        Task.id == task_id, Task.owner_id == user_id
+    ).first()
     if not task:
         raise TaskNotFoundError()
     return task
@@ -28,7 +30,9 @@ def create_task(db: Session, task_info: TaskCreate, user_id: int) -> Task:
         db.refresh(task)
     except IntegrityError as e:
         db.rollback()
-        raise IntegrityError(statement="Data integrity violation. Please check your input and try again.",
+        raise IntegrityError(statement="Data integrity violation. "
+                                       "Please check your input "
+                                       "and try again.",
                              params=e.params,
                              orig=e.orig
                              )
@@ -36,7 +40,10 @@ def create_task(db: Session, task_info: TaskCreate, user_id: int) -> Task:
     return task
 
 
-def update_task(db: Session, task_info: TaskCreate, task_id: int, user_id: int) -> Task:
+def update_task(db: Session,
+                task_info: TaskCreate,
+                task_id: int,
+                user_id: int) -> Task:
     task_data = task_info.dict()
     task = db.query(Task).filter(Task.id == task_id, Task.owner_id == user_id)
     if not task.first():

@@ -12,7 +12,8 @@ router = APIRouter(tags=['users'])
 
 
 @router.post('/users/')
-def register_user(user_data: UserCreate, db: Annotated[SESSION, Depends(get_db)]) -> User:
+def register_user(user_data: UserCreate,
+                  db: Annotated[SESSION, Depends(get_db)]) -> User:
     try:
         user = create_user(db, user_data)
     except IntegrityError as e:
@@ -21,7 +22,8 @@ def register_user(user_data: UserCreate, db: Annotated[SESSION, Depends(get_db)]
 
 
 @router.post("/token/")
-async def login(user_info: UserLogin, db: Annotated[SESSION, Depends(get_db)]) -> Token:
+async def login(user_info: UserLogin,
+                db: Annotated[SESSION, Depends(get_db)]) -> Token:
     user = authenticate_user(db, user_info.email, user_info.password)
     if not user:
         raise HTTPException(

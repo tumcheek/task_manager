@@ -4,7 +4,8 @@ from typing import List, Annotated
 
 from core.database import get_db
 from models import User
-from services.exeptions import TaskNotFoundError, TagNotAssociatedError, TagNotFoundError, TagAlreadyExistsError
+from services.exeptions import (TaskNotFoundError, TagNotAssociatedError,
+                                TagNotFoundError, TagAlreadyExistsError)
 from schemas.tags import Tag, TagCreate
 
 from services import tags
@@ -32,9 +33,11 @@ def create_tag_for_task(
     try:
         return tags.create_tag_for_task(db, task_id, tag, current_user.id)
     except TaskNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Task not found")
     except TagAlreadyExistsError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tag already exists")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Tag already exists")
 
 
 @router.get("/tasks/{task_id}", response_model=List[Tag])
@@ -46,10 +49,12 @@ def get_task_tags(
     try:
         return tags.get_task_tags(db, task_id, current_user.id)
     except TaskNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Task not found")
 
 
-@router.delete("/tasks/{task_id}/{tag_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/tasks/{task_id}/{tag_id}",
+               status_code=status.HTTP_204_NO_CONTENT)
 def delete_tag_from_task(
     task_id: int,
     tag_id: int,
@@ -59,9 +64,12 @@ def delete_tag_from_task(
     try:
         tags.delete_tag_from_task(db, task_id, tag_id, current_user.id)
     except TaskNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Task not found")
     except TagNotFoundError:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tag not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Tag not found")
     except TagNotAssociatedError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tag is not associated with this task")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Tag is not associated with this task")
     return {"detail": "Tag removed from task successfully"}

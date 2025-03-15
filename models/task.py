@@ -27,12 +27,17 @@ class Task(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str]
     description: Mapped[str] = mapped_column(String, nullable=True)
-    status: Mapped[TaskStatus] = mapped_column(Enum(TaskStatus), default=TaskStatus.TO_DO)
-    priority: Mapped[TaskPriority] = mapped_column(Enum(TaskPriority), nullable=True)
+    status: Mapped[TaskStatus] = mapped_column(Enum(TaskStatus),
+                                               default=TaskStatus.TO_DO)
+    priority: Mapped[TaskPriority] = mapped_column(Enum(TaskPriority),
+                                                   nullable=True)
     owner_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
     due_date: Mapped[datetime] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now)
+    created_at: Mapped[datetime] = mapped_column(DateTime,
+                                                 default=datetime.now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime,
+                                                 default=datetime.now,
+                                                 onupdate=datetime.now)
 
     owner: Mapped["User"] = relationship(back_populates="tasks")
     tags: Mapped[list["Tag"]] = relationship(

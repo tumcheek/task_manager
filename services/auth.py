@@ -43,4 +43,3 @@ def authenticate_user(db: SESSION, email: EmailStr, password: str):
     if not verify_password(password, user.password):
         return False
     return user
-
