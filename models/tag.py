@@ -20,8 +20,13 @@ class Tag(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     title: Mapped[str]
     owner_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now)
+    created_at: Mapped[datetime] = mapped_column(DateTime,
+                                                 default=datetime.now
+                                                 )
+    updated_at: Mapped[datetime] = mapped_column(DateTime,
+                                                 default=datetime.now,
+                                                 onupdate=datetime.now
+                                                 )
 
     owner: Mapped["User"] = relationship(back_populates="tags")
     tasks: Mapped[list["Task"]] = relationship(

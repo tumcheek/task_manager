@@ -26,5 +26,3 @@ class TaskCreate(BaseModel):
     status: TaskStatus
     priority: Optional[TaskPriority] = None
     due_date: Optional[datetime] = None
-
-
