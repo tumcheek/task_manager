@@ -33,3 +33,36 @@ To check a specific file:
 ```
 flake8 path/to/file.py
 ```
+
+## MyPy – Static Type Checking
+Along with Flake8, we also use Mypy for static type checking. Mypy helps detect type-related bugs before runtime.
+### Running Mypy
+Run Mypy on the entire project:
+```
+mypy .
+```
+Check a specific file:
+```
+mypy path/to/file.py
+```
+## Run Both (Flake8 & Mypy)
+Instead of running Flake8 and Mypy separately, you can run both at once using the script:
+```
+python scripts/check_code.py
+```
+## Pre-Commit Hooks
+This project includes pre-commit hooks to enforce code quality before commits.
+
+* Pre-commit hooks run Flake8 automatically when making a commit.
+* If any style or syntax issues are found, the commit is blocked until the issues are fixed.
+
+To manually trigger the pre-commit checks, run:
+```
+pre-commit run --all-files
+```
+
+## CI Integration – GitHub Actions
+Code quality is enforced automatically through GitHub Actions.
+
+* On every push to main and on pull requests, Flake8 checks are executed.
+* If any issues are found, the pipeline fails, ensuring only clean code is merged.
