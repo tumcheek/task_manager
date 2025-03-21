@@ -14,6 +14,23 @@ router = APIRouter(tags=['users'])
 @router.post('/users/')
 def register_user(user_data: UserCreate,
                   db: Annotated[SESSION, Depends(get_db)]) -> User:
+    """
+    Registers a new user in the system.
+
+    Attempts to create a new user in the database using the provided user data.
+    If a user with the same email already exists or any other integrity constraint
+    is violated, raises an HTTP 400 error.
+
+    Args:
+        user_data (UserCreate): The data required to create a new user.
+        db (SESSION): The database session dependency.
+
+    Returns:
+        User: The newly created user with selected fields (e.g. ID and email).
+
+    Raises:
+        HTTPException: If the user cannot be created due to a database integrity error.
+    """
     try:
         user = create_user(db, user_data)
     except IntegrityError as e:
@@ -24,6 +41,23 @@ def register_user(user_data: UserCreate,
 @router.post("/token/")
 async def login(user_info: UserLogin,
                 db: Annotated[SESSION, Depends(get_db)]) -> Token:
+    """
+    Authenticates a user and returns an access token.
+
+    Verifies the user's credentials (email and password). If authentication
+    is successful, generates and returns a JWT access token. Otherwise,
+    returns an HTTP 401 error with appropriate headers.
+
+    Args:
+        user_info (UserLogin): The login credentials including email and password.
+        db (SESSION): The database session dependency.
+
+    Returns:
+        Token: An access token object containing the JWT and token type.
+
+    Raises:
+        HTTPException: If authentication fails due to invalid credentials.
+    """
     user = authenticate_user(db, user_info.email, user_info.password)
     if not user:
         raise HTTPException(
@@ -40,4 +74,17 @@ async def login(user_info: UserLogin,
 async def read_users_me(
     current_user: Annotated[User, Depends(get_current_user)],
 ):
+    """
+    Get the currently authenticated user's profile.
+
+    Returns information about the user associated with the provided access token.
+    This endpoint requires authentication via a valid bearer token.
+
+    Args:
+        current_user (User): The user extracted from the authentication token,
+            resolved through dependency injection.
+
+    Returns:
+        User: The authenticated user's profile data.
+    """
     return current_user
