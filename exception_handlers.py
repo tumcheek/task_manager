@@ -3,6 +3,7 @@ import uuid
 
 from fastapi import Request
 from fastapi.responses import JSONResponse
+from sentry_sdk import capture_exception
 
 from services.exeptions import TaskNotFoundError, TagNotFoundError, TagNotAssociatedError, TagAlreadyExistsError
 
@@ -10,6 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def general_exception_handler(request: Request, exc: Exception):
+    capture_exception(exc)
     error_id = str(uuid.uuid4())
     logger.error(
         f"Unhandled exception [{error_id}] during {request.method} {request.url}:\n{exc}",
