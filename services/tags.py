@@ -56,7 +56,7 @@ def delete_tag_from_task(db: Session,
         Task.id == task_id, Task.owner_id == user_id
     ).first()
     if not task:
-        raise TaskNotFoundError(f"Task with id {task_id} not found")
+        raise TaskNotFoundError(task_id)
 
     tag = db.query(Tag).filter(Tag.id == tag_id).first()
     if not tag:

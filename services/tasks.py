@@ -57,7 +57,7 @@ def update_task(db: Session,
 def delete_task(db: Session, task_id: int, user_id: int) -> bool:
     task = db.query(Task).filter(Task.id == task_id, Task.owner_id == user_id)
     if not task.first():
-        raise TaskNotFoundError()
+        raise TaskNotFoundError(task_id)
     task.delete()
     db.commit()
     return True
