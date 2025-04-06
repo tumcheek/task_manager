@@ -7,7 +7,6 @@ from sqlalchemy.exc import IntegrityError
 
 from core.database import get_db
 from core.auth import get_current_user
-from services.exeptions import TaskNotFoundError
 from services.tasks import (get_user_tasks_list, create_task, update_task,
                             delete_task, get_user_task_detail)
 from schemas.task import TaskCreate, Task
@@ -57,12 +56,9 @@ def get_user_task(task_id: int,
 
     Raises:
         HTTPException:
-            - 400 if the task is not found or does not belong to the user.
+            - 404 if the task is not found or does not belong to the user.
     """
-    try:
-        task = get_user_task_detail(db, current_user.id, task_id)
-    except TaskNotFoundError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    task = get_user_task_detail(db, current_user.id, task_id)
     return Task.from_orm(task)
 
 
@@ -99,7 +95,7 @@ def create_user_task(task_form: TaskCreate,
 def update_user_task(task_id: int,
                      task_form: TaskCreate,
                      current_user: Annotated[User, Depends(get_current_user)],
-                     db: Session = Depends(get_db)) -> TaskCreate:
+                     db: Session = Depends(get_db)) -> Task:
 
     """
     Update an existing task for the currently authenticated user.
@@ -118,12 +114,10 @@ def update_user_task(task_id: int,
 
     Raises:
         HTTPException:
-            - 400 if the task is not found or does not belong to the user.
+            - 404 if the task is not found or does not belong to the user.
     """
-    try:
-        task = update_task(db, task_form, task_id,  current_user.id)
-    except TaskNotFoundError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+
+    task = update_task(db, task_form, task_id,  current_user.id)
     return Task.from_orm(task)
 
 
@@ -149,7 +143,5 @@ def delete_user_task(task_id: int,
         HTTPException:
             - 404 if the task is not found or does not belong to the user.
     """
-    try:
-        delete_task(db, task_id,  current_user.id)
-    except TaskNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+
+    delete_task(db, task_id,  current_user.id)

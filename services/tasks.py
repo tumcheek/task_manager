@@ -17,7 +17,7 @@ def get_user_task_detail(db: Session, user_id: int, task_id: int) -> Task:
         Task.id == task_id, Task.owner_id == user_id
     ).first()
     if not task:
-        raise TaskNotFoundError()
+        raise TaskNotFoundError(task_id)
     return task
 
 
@@ -47,7 +47,7 @@ def update_task(db: Session,
     task_data = task_info.dict()
     task = db.query(Task).filter(Task.id == task_id, Task.owner_id == user_id)
     if not task.first():
-        raise TaskNotFoundError()
+        raise TaskNotFoundError(task_id)
     task.update(task_data)
     db.commit()
     updated_task = db.query(Task).filter(Task.id == task_id).first()
