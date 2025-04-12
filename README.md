@@ -55,3 +55,29 @@ def get_user(user_id: int) -> User:
         HTTPException: If the user is not found.
     """
     ...
+
+```
+## 🛠 Error Monitoring with Sentry
+
+This project integrates with [Sentry](https://sentry.io) for real-time error tracking and diagnostics.
+
+### ✨ Features
+
+- Automatically captures unhandled exceptions
+- Logs useful debugging context: stack traces, request details, environment info
+- Shows unique `error_id` values in API responses to assist with support
+
+### ⚙️ Configuration
+
+Sentry is configured via environment variables:
+
+- `SENTRY_DSN` – your Sentry project DSN
+- `SENTRY_ENVIRONMENT` – environment name (`development`, `staging`, `production`, etc.)
+
+These variables are loaded on application startup.
+
+### ✅ Best Practices
+
+- Do not expose technical error details to users
+- Include `error_id` in error responses to assist with issue tracking
+- Keep environments separated in Sentry for clearer project management

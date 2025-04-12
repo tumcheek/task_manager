@@ -1,16 +1,16 @@
 class TaskNotFoundError(Exception):
     """Exception raised when a task is not found."""
-    def __init__(self, message="Task not found"):
-        self.message = message
-        super().__init__(self.message)
+    def __init__(self, task_id):
+        self.task_id = task_id
+        super().__init__(f"Task with ID {task_id} not found")
 
 
 class TagNotFoundError(Exception):
     """Exception raised when a tag is not found."""
 
-    def __init__(self, message="Tag not found"):
-        self.message = message
-        super().__init__(self.message)
+    def __init__(self, tag_id):
+        self.tag_id = tag_id
+        super().__init__(f"Tag with ID {tag_id} not found")
 
 
 class TagAlreadyExistsError(Exception):
@@ -18,4 +18,7 @@ class TagAlreadyExistsError(Exception):
 
 
 class TagNotAssociatedError(Exception):
-    pass
+    def __init__(self, task_id, tag_id):
+        self.tag_id = tag_id
+        self.task_id = task_id
+        super().__init__(f"Tag with ID {tag_id} is not associated with task with ID {task_id}")

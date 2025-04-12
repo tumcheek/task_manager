@@ -19,7 +19,7 @@ def create_tag_for_task(db: Session,
     db_task = db.query(Task).filter(
         Task.id == task_id, Task.owner_id == user_id).first()
     if not db_task:
-        raise TaskNotFoundError(f"Task with id {task_id} not found")
+        raise TaskNotFoundError(task_id)
 
     new_tag = Tag(**tag_data.dict(), owner_id=user_id)
     db.add(new_tag)
@@ -44,7 +44,7 @@ def get_task_tags(db: Session, task_id: int, user_id: int) -> List[Tag]:
         Task.id == task_id, Task.owner_id == user_id
     ).first()
     if not task:
-        raise TaskNotFoundError(f"Task with id {task_id} not found")
+        raise TaskNotFoundError(task_id)
     return task.tags
 
 
@@ -56,17 +56,14 @@ def delete_tag_from_task(db: Session,
         Task.id == task_id, Task.owner_id == user_id
     ).first()
     if not task:
-        raise TaskNotFoundError(f"Task with id {task_id} not found")
+        raise TaskNotFoundError(task_id)
 
     tag = db.query(Tag).filter(Tag.id == tag_id).first()
     if not tag:
-        raise TagNotFoundError(f"Tag with id {tag_id} not found")
+        raise TagNotFoundError(tag_id)
 
     if tag not in task.tags:
-        raise TagNotAssociatedError(
-            f"Tag with id {tag_id} is not associated "
-            f"with task with id {task_id}"
-        )
+        raise TagNotAssociatedError(task_id, tag_id)
 
     task.tags.remove(tag)
     db.commit()
