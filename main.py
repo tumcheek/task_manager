@@ -31,5 +31,5 @@ app.add_exception_handler(TagAlreadyExistsError, tag_already_exists_error_handle
 
 app.add_middleware(LoggingMiddleware)
 
-if PROFILING.isdigit() and bool(int(PROFILING)):
+if PROFILING and PROFILING.isdigit() and bool(int(PROFILING)):
     app.middleware('http')(profile_request)
