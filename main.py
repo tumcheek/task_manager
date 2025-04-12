@@ -1,10 +1,10 @@
 from fastapi import APIRouter, FastAPI
 
-from core import SENTRY_DSN
+from core import SENTRY_DSN, PROFILING
 from exception_handlers import (general_exception_handler, task_not_found_exception_handler,
                                 tag_not_found_exception_handler, tag_not_associated_error_handler,
                                 tag_already_exists_error_handler)
-from middleware import LoggingMiddleware
+from middleware import LoggingMiddleware, profile_request
 from routers import auth, tasks, tags
 from services.exeptions import TaskNotFoundError, TagNotFoundError, TagNotAssociatedError, TagAlreadyExistsError
 import sentry_sdk
@@ -30,3 +30,6 @@ app.add_exception_handler(TagNotAssociatedError, tag_not_associated_error_handle
 app.add_exception_handler(TagAlreadyExistsError, tag_already_exists_error_handler)
 
 app.add_middleware(LoggingMiddleware)
+
+if PROFILING.isdigit() and bool(int(PROFILING)):
+    app.middleware('http')(profile_request)
