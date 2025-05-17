@@ -9,13 +9,13 @@ from main import app
 from models import Base, User, Task
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def engine():
     """Create a new SQLAlchemy engine for testing."""
     return create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def tables(engine):
     """Create all tables before the tests run, and drop them after."""
     Base.metadata.create_all(engine)
@@ -23,7 +23,7 @@ def tables(engine):
     Base.metadata.drop_all(engine)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def dbsession(engine, tables):
     """Create a new database session for a test."""
     connection = engine.connect()
@@ -41,15 +41,26 @@ def dbsession(engine, tables):
 @pytest.fixture
 def user(dbsession):
     """Create a user for testing."""
-    user = User(first_name='Test', last_name='User', email='testuser@example.com', password='Testpassword')
+    user = User(
+        first_name="Test",
+        last_name="User",
+        email="testuser@example.com",
+        password="Testpassword",
+    )
     dbsession.add(user)
     dbsession.commit()
     return user
 
+
 @pytest.fixture
 def another_user(dbsession):
     """Create a user for testing."""
-    user = User(first_name='Test', last_name='User', email='anothertestuser@example.com', password='Testpassword')
+    user = User(
+        first_name="Test",
+        last_name="User",
+        email="anothertestuser@example.com",
+        password="Testpassword",
+    )
     dbsession.add(user)
     dbsession.commit()
     return user
@@ -83,9 +94,11 @@ def another_user_task(dbsession, another_user):
     dbsession.refresh(task)
     return task
 
+
 @pytest.fixture
 def client(dbsession):
     """Creates a FastAPI test client with overridden dependencies."""
+
     def override_get_db():
         try:
             yield dbsession
@@ -102,4 +115,4 @@ def client(dbsession):
 
 @pytest.fixture
 def task_detail_url():
-    return '/api/v1/tasks/{task_id}/'
+    return "/api/v1/tasks/{task_id}/"

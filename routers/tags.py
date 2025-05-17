@@ -9,13 +9,13 @@ from schemas.tags import Tag, TagCreate
 from services import tags
 from .auth import get_current_user
 
-router = APIRouter(tags=['tags'])
+router = APIRouter(tags=["tags"])
 
 
 @router.get("/user/tags/", response_model=List[Tag])
 def get_user_tags(
     current_user: Annotated[User, Depends(get_current_user)],
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Retrieve tags associated with the currently authenticated user.
@@ -38,7 +38,7 @@ def create_tag_for_task(
     task_id: int,
     tag: TagCreate,
     current_user: Annotated[User, Depends(get_current_user)],
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Create a new tag for a specific task.
@@ -65,42 +65,40 @@ def create_tag_for_task(
     return tags.create_tag_for_task(db, task_id, tag, current_user.id)
 
 
-
 @router.get("/tasks/{task_id}", response_model=List[Tag])
 def get_task_tags(
     task_id: int,
     current_user: Annotated[User, Depends(get_current_user)],
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
-     Retrieve all tags associated with a specific task.
+    Retrieve all tags associated with a specific task.
 
-     Returns a list of tags linked to the given task, if the task belongs to the
-     currently authenticated user. Requires authentication.
+    Returns a list of tags linked to the given task, if the task belongs to the
+    currently authenticated user. Requires authentication.
 
-     Args:
-         task_id (int): The ID of the task whose tags are to be retrieved.
-         current_user (User): The currently authenticated user.
-         db (Session): The database session dependency.
+    Args:
+        task_id (int): The ID of the task whose tags are to be retrieved.
+        current_user (User): The currently authenticated user.
+        db (Session): The database session dependency.
 
-     Returns:
-         List[Tag]: A list of tags associated with the specified task.
+    Returns:
+        List[Tag]: A list of tags associated with the specified task.
 
-     Raises:
-         HTTPException:
-             - 404 if the task is not found or does not belong to the user.
-     """
+    Raises:
+        HTTPException:
+            - 404 if the task is not found or does not belong to the user.
+    """
 
     return tags.get_task_tags(db, task_id, current_user.id)
 
 
-@router.delete("/tasks/{task_id}/{tag_id}",
-               status_code=status.HTTP_200_OK)
+@router.delete("/tasks/{task_id}/{tag_id}", status_code=status.HTTP_200_OK)
 def delete_tag_from_task(
     task_id: int,
     tag_id: int,
     current_user: Annotated[User, Depends(get_current_user)],
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Remove a tag from a specific task.

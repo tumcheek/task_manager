@@ -11,7 +11,7 @@ from schemas.user import UserCreate
 def create_user(db: SESSION, user_info: UserCreate) -> User:
     hashed_password = get_password_hash(user_info.password)
     user_data = user_info.dict()
-    user_data['password'] = hashed_password
+    user_data["password"] = hashed_password
     user = User(**user_data)
     try:
         db.add(user)
@@ -19,10 +19,9 @@ def create_user(db: SESSION, user_info: UserCreate) -> User:
         db.refresh(user)
     except IntegrityError as e:
         db.rollback()
-        raise IntegrityError(statement="Email already registered",
-                             params=e.params,
-                             orig=e.orig
-                             )
+        raise IntegrityError(
+            statement="Email already registered", params=e.params, orig=e.orig
+        )
 
     return user
 

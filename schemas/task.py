@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, ConfigDict
 
@@ -26,3 +26,13 @@ class TaskCreate(BaseModel):
     status: TaskStatus
     priority: Optional[TaskPriority] = None
     due_date: Optional[datetime] = None
+
+
+class PaginatedTasks(BaseModel):
+    total: int
+    page: int
+    size: int
+    pages: int
+    has_next: bool
+    has_prev: bool
+    tasks: List[Task]

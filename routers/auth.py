@@ -8,12 +8,13 @@ from core.auth import create_access_token, get_current_user
 from services.auth import create_user, authenticate_user
 from schemas.user import UserCreate, User, Token, UserLogin
 
-router = APIRouter(tags=['users'])
+router = APIRouter(tags=["users"])
 
 
-@router.post('/users/')
-def register_user(user_data: UserCreate,
-                  db: Annotated[SESSION, Depends(get_db)]) -> User:
+@router.post("/users/")
+def register_user(
+    user_data: UserCreate, db: Annotated[SESSION, Depends(get_db)]
+) -> User:
     """
     Registers a new user in the system.
 
@@ -39,8 +40,7 @@ def register_user(user_data: UserCreate,
 
 
 @router.post("/token/")
-async def login(user_info: UserLogin,
-                db: Annotated[SESSION, Depends(get_db)]) -> Token:
+async def login(user_info: UserLogin, db: Annotated[SESSION, Depends(get_db)]) -> Token:
     """
     Authenticates a user and returns an access token.
 
