@@ -3,8 +3,12 @@ from typing import List
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from models import Task, Tag
-from services.exeptions import (TaskNotFoundError, TagNotFoundError,
-                                TagNotAssociatedError, TagAlreadyExistsError)
+from services.exeptions import (
+    TaskNotFoundError,
+    TagNotFoundError,
+    TagNotAssociatedError,
+    TagAlreadyExistsError,
+)
 from schemas import tags
 
 
@@ -12,12 +16,12 @@ def get_user_tags(db: Session, user_id: int) -> List[Tag]:
     return db.query(Tag).filter(Tag.owner_id == user_id).all()
 
 
-def create_tag_for_task(db: Session,
-                        task_id: int,
-                        tag_data: tags.Tag,
-                        user_id: int) -> Tag:
-    db_task = db.query(Task).filter(
-        Task.id == task_id, Task.owner_id == user_id).first()
+def create_tag_for_task(
+    db: Session, task_id: int, tag_data: tags.Tag, user_id: int
+) -> Tag:
+    db_task = (
+        db.query(Task).filter(Task.id == task_id, Task.owner_id == user_id).first()
+    )
     if not db_task:
         raise TaskNotFoundError(task_id)
 
@@ -32,29 +36,20 @@ def create_tag_for_task(db: Session,
         db.refresh(new_tag)
     except IntegrityError:
         db.rollback()
-        raise TagAlreadyExistsError(
-            "Tag with this title already exists for this user"
-        )
+        raise TagAlreadyExistsError("Tag with this title already exists for this user")
 
     return new_tag
 
 
 def get_task_tags(db: Session, task_id: int, user_id: int) -> List[Tag]:
-    task = db.query(Task).filter(
-        Task.id == task_id, Task.owner_id == user_id
-    ).first()
+    task = db.query(Task).filter(Task.id == task_id, Task.owner_id == user_id).first()
     if not task:
         raise TaskNotFoundError(task_id)
     return task.tags
 
 
-def delete_tag_from_task(db: Session,
-                         task_id: int,
-                         tag_id: int,
-                         user_id: int) -> None:
-    task = db.query(Task).filter(
-        Task.id == task_id, Task.owner_id == user_id
-    ).first()
+def delete_tag_from_task(db: Session, task_id: int, tag_id: int, user_id: int) -> None:
+    task = db.query(Task).filter(Task.id == task_id, Task.owner_id == user_id).first()
     if not task:
         raise TaskNotFoundError(task_id)
 

@@ -41,6 +41,7 @@ DATABASE_URL = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_na
 
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
+
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
@@ -79,9 +80,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

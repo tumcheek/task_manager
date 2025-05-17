@@ -25,20 +25,15 @@ class JWTBearer(HTTPBearer):
         if credentials:
             if not credentials.scheme == "Bearer":
                 raise HTTPException(
-                    status_code=403,
-                    detail="Invalid authentication scheme."
+                    status_code=403, detail="Invalid authentication scheme."
                 )
             if not self.verify_jwt(credentials.credentials):
                 raise HTTPException(
-                    status_code=403,
-                    detail="Invalid token or expired token."
+                    status_code=403, detail="Invalid token or expired token."
                 )
             return credentials.credentials
         else:
-            raise HTTPException(
-                status_code=403,
-                detail="Invalid authorization code."
-            )
+            raise HTTPException(status_code=403, detail="Invalid authorization code.")
 
     def verify_jwt(self, token: str) -> bool:
         try:
@@ -56,16 +51,18 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = (datetime.now(timezone.utc) +
-                  timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+        expire = datetime.now(timezone.utc) + timedelta(
+            minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+        )
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
 
-async def get_current_user(db: Annotated[SESSION, Depends(get_db)],
-                           token: Annotated[str, Depends(oauth2_scheme)]
-                           ):
+async def get_current_user(
+    db: Annotated[SESSION, Depends(get_db)],
+    token: Annotated[str, Depends(oauth2_scheme)],
+):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",

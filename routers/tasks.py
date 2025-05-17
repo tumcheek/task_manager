@@ -1,24 +1,35 @@
 from typing import Annotated
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from core.database import get_db
 from core.auth import get_current_user
-from services.tasks import (get_user_tasks_list, create_task, update_task,
-                            delete_task, get_user_task_detail)
-from schemas.task import TaskCreate, Task
+from utils import paginate_query
+from services.tasks import (
+    get_user_tasks_list,
+    create_task,
+    update_task,
+    delete_task,
+    get_user_task_detail,
+)
+from schemas.task import TaskCreate, Task, PaginatedTasks
 from schemas.user import User
+from models import Task as TaskModel
 
 
 router = APIRouter(tags=["tasks"])
 
 
 @router.get("/tasks/")
-def get_user_tasks(current_user: Annotated[User, Depends(get_current_user)],
-                   db: Session = Depends(get_db)):
+def get_user_tasks(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+    page: int = Query(1, ge=1),
+    size: int = Query(10, ge=1, le=100),
+) -> PaginatedTasks:
     """
     Retrieve all tasks for the currently authenticated user.
 
@@ -32,14 +43,28 @@ def get_user_tasks(current_user: Annotated[User, Depends(get_current_user)],
     Returns:
         List[Task]: A list of tasks owned by the authenticated user.
     """
-    tasks = get_user_tasks_list(db, current_user.id)
-    return tasks
+    tasks = get_user_tasks_list(db, current_user.id, page, size)
+    base_query = db.query(TaskModel).filter(TaskModel.owner_id == current_user.id)
+    total, pages, offset = paginate_query(base_query, page, size)
+
+    return PaginatedTasks(
+        total=total,
+        pages=pages,
+        page=page,
+        size=size,
+        offset=offset,
+        tasks=list(tasks),
+        has_next=page < pages,
+        has_prev=page > 1,
+    )
 
 
 @router.get("/tasks/{task_id}/")
-def get_user_task(task_id: int,
-                  current_user: Annotated[User, Depends(get_current_user)],
-                  db: Session = Depends(get_db)) -> Task:
+def get_user_task(
+    task_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> Task:
     """
     Retrieve details of a specific task belonging to the authenticated user.
 
@@ -63,9 +88,11 @@ def get_user_task(task_id: int,
 
 
 @router.post("/tasks/", status_code=status.HTTP_201_CREATED)
-def create_user_task(task_form: TaskCreate,
-                     current_user: Annotated[User, Depends(get_current_user)],
-                     db: Session = Depends(get_db)) -> Task:
+def create_user_task(
+    task_form: TaskCreate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> Task:
     """
     Create a new task for the currently authenticated user.
 
@@ -92,11 +119,12 @@ def create_user_task(task_form: TaskCreate,
 
 
 @router.put("/tasks/{task_id}/", status_code=status.HTTP_200_OK)
-def update_user_task(task_id: int,
-                     task_form: TaskCreate,
-                     current_user: Annotated[User, Depends(get_current_user)],
-                     db: Session = Depends(get_db)) -> Task:
-
+def update_user_task(
+    task_id: int,
+    task_form: TaskCreate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> TaskCreate:
     """
     Update an existing task for the currently authenticated user.
 
@@ -117,14 +145,16 @@ def update_user_task(task_id: int,
             - 404 if the task is not found or does not belong to the user.
     """
 
-    task = update_task(db, task_form, task_id,  current_user.id)
+    task = update_task(db, task_form, task_id, current_user.id)
     return Task.from_orm(task)
 
 
 @router.delete("/tasks/{task_id}/", status_code=status.HTTP_204_NO_CONTENT)
-def delete_user_task(task_id: int,
-                     current_user: Annotated[User, Depends(get_current_user)],
-                     db: Session = Depends(get_db)):
+def delete_user_task(
+    task_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+):
     """
     Delete a task belonging to the currently authenticated user.
 
@@ -144,4 +174,4 @@ def delete_user_task(task_id: int,
             - 404 if the task is not found or does not belong to the user.
     """
 
-    delete_task(db, task_id,  current_user.id)
+    delete_task(db, task_id, current_user.id)

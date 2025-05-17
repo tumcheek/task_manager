@@ -3,7 +3,7 @@ from logging.config import dictConfig
 
 os.makedirs("logs", exist_ok=True)
 
-LOG_LEVEL = os.environ.get('LOGGING_LEVEL', 'INFO')
+LOG_LEVEL = os.environ.get("LOGGING_LEVEL", "INFO")
 
 LOGGING_CONFIG = {
     "version": 1,
@@ -14,7 +14,8 @@ LOGGING_CONFIG = {
         },
         "colored": {
             "class": "colorlog.ColoredFormatter",
-            "format": "%(log_color)s%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+            "format": "%(log_color)s%(asctime)s - %(levelname)s "
+            "- %(name)s - %(message)s",
             "log_colors": {
                 "DEBUG": "cyan",
                 "INFO": "green",
@@ -54,11 +55,8 @@ LOGGING_CONFIG = {
             "propagate": False,
         },
     },
-
     "root": {
         "handlers": ["console", "file"],
         "level": LOG_LEVEL,
     },
 }
-
-dictConfig(LOGGING_CONFIG)

@@ -23,7 +23,7 @@ async def profile_request(request: Request, call_next):
         path = request.url.path.strip("/").replace("/", "_") or "root"
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-        safe_name = quote(f"{method}_{path}_{timestamp}.html", safe='')
+        safe_name = quote(f"{method}_{path}_{timestamp}.html", safe="")
 
         file_path = os.path.join(PROFILE_DIR, safe_name)
 
@@ -34,4 +34,3 @@ async def profile_request(request: Request, call_next):
 
     else:
         return await call_next(request)
-
