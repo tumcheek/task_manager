@@ -15,7 +15,7 @@ from exception_handlers import (
 from middleware import LoggingMiddleware, profile_request
 from routers import auth, tasks, tags, projects
 from seeds import seed_roles
-from services.exeptions import (
+from exeptions import (
     TaskNotFoundError,
     TagNotFoundError,
     TagNotAssociatedError,

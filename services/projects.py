@@ -1,11 +1,13 @@
 from typing import Type
 
+from fastapi import HTTPException
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from models import Project, ProjectMember
 from schemas.projects import ProjectCreate
-from services.exeptions import ProjectNotFoundError
+from exeptions import ProjectNotFoundError
 
 
 def create_project(db: Session, project: ProjectCreate):
@@ -23,16 +25,16 @@ def create_project(db: Session, project: ProjectCreate):
             params=e.params,
             orig=e.orig,
         )
+    return project
 
 
 def get_user_projects(db: Session, user_id: int) -> list[Type[Project]]:
-    user_projects_id = (
-        db.query(ProjectMember.project_id)
-        .filter(ProjectMember.user_id == user_id)
-        .all()
+    stmt = select(Project).where(
+        Project.id.in_(
+            select(ProjectMember.project_id).where(ProjectMember.user_id == user_id)
+        )
     )
-    projects = db.query(Project).filter(Project.id.in_(user_projects_id)).all()
-    return projects
+    return db.execute(stmt).scalars().all()
 
 
 def get_all_projects(db: Session) -> list[Type[Project]]:
@@ -62,3 +64,18 @@ def delete_project(db: Session, project_id: int):
 
     db.delete(project)
     db.commit()
+
+
+def add_user_to_project(db: Session, project_id: int, user_id: int):
+    exists = (
+        db.query(ProjectMember)
+        .filter_by(project_id=project_id, user_id=user_id)
+        .first()
+    )
+    if exists:
+        raise HTTPException(status_code=400, detail="User is already a member")
+
+    membership = ProjectMember(project_id=project_id, user_id=user_id)
+    db.add(membership)
+    db.commit()
+    return membership

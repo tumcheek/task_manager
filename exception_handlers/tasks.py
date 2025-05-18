@@ -4,7 +4,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 
 
-from services.exeptions import TaskNotFoundError
+from exeptions import TaskNotFoundError
 
 logger = logging.getLogger(__name__)
 

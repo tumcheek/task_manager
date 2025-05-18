@@ -3,7 +3,7 @@ from typing import List
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 from models import Task, Tag
-from services.exeptions import (
+from exeptions import (
     TaskNotFoundError,
     TagNotFoundError,
     TagNotAssociatedError,

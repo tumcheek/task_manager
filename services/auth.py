@@ -4,15 +4,16 @@ from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.orm import Session
 
 from core.security import get_password_hash, verify_password
-from models import User
+from models import User, Role
 from schemas.user import UserCreate
 
 
 def create_user(db: Session, user_info: UserCreate) -> User:
+    default_role = db.query(Role).filter_by(name="user").first()
     hashed_password = get_password_hash(user_info.password)
     user_data = user_info.dict()
     user_data["password"] = hashed_password
-    user = User(**user_data)
+    user = User(**user_data, role_id=default_role.id)
     try:
         db.add(user)
         db.commit()

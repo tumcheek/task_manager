@@ -1,32 +1,49 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query, HTTPException, status
 from sqlalchemy.orm import Session
-from starlette import status
+from sqlalchemy.exc import IntegrityError
 
 from core import get_current_user, get_db
+from dependencies.permissions import (
+    ensure_user_is_admin,
+    verify_user_in_project_or_admin,
+)
+
 from models import User
-from schemas.projects import ProjectCreate, ProjectInfo
+from schemas.projects import ProjectCreate, ProjectInfo, AddMemberInput
 from services.projects import (
     create_project,
     get_user_projects,
     get_all_projects,
     update_project,
     delete_project,
+    add_user_to_project,
 )
+
+from utils import paginate_query
+from services.tasks import (
+    get_user_tasks_list,
+    create_task,
+    update_task,
+    delete_task,
+    get_user_task_detail,
+)
+from schemas.task import TaskCreate, Task, PaginatedTasks
+from models import Task as TaskModel
 
 router = APIRouter(tags=["projects"])
 
 
-@router.post("/projects/", response_model=ProjectInfo)
+@router.post(
+    "/projects/",
+    response_model=ProjectInfo,
+    dependencies=[Depends(ensure_user_is_admin)],
+)
 def add_project(
     project_form: ProjectCreate,
-    current_user: Annotated[User, Depends(get_current_user)],
     db: Session = Depends(get_db),
 ):
-    if current_user.role.name != "admin":
-        # TODO: Write custom error
-        raise PermissionError("User is not allowed to create projects")
     project_instance = create_project(db, project_form)
     return ProjectInfo.from_orm(project_instance)
 
@@ -40,38 +57,229 @@ def list_user_projects(
     return projects
 
 
-@router.get("/projects/", response_model=list[ProjectInfo])
+@router.get(
+    "/projects/",
+    response_model=list[ProjectInfo],
+    dependencies=[Depends(ensure_user_is_admin)],
+)
 def list_all_projects(
-    current_user: Annotated[User, Depends(get_current_user)],
     db: Session = Depends(get_db),
 ):
-    if current_user.role.name != "admin":
-        # TODO: Write custom error
-        raise PermissionError("User is not allowed to create projects")
     projects = get_all_projects(db)
     return projects
 
 
-@router.put("/projects/{project_id}", response_model=ProjectInfo)
+@router.put(
+    "/projects/{project_id}",
+    response_model=ProjectInfo,
+    dependencies=[Depends(ensure_user_is_admin)],
+)
 def edit_project(
     project_id: int,
     project_form: ProjectCreate,
-    current_user: Annotated[User, Depends(get_current_user)],
     db: Session = Depends(get_db),
 ):
-
-    if current_user.role.name != "admin":
-        # TODO: Write custom error
-        raise PermissionError("User is not allowed to update projects")
     return update_project(db, project_form, project_id)
 
 
-@router.delete("/projects/{project_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/projects/{project_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(ensure_user_is_admin)],
+)
 def remove_project(
+    project_id: int,
+    db: Session = Depends(get_db),
+):
+    delete_project(db, project_id)
+
+
+@router.get(
+    "/projects/{project_id}/tasks/",
+    dependencies=[Depends(verify_user_in_project_or_admin)],
+)
+def get_user_tasks(
     project_id: int,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Session = Depends(get_db),
+    page: int = Query(1, ge=1),
+    size: int = Query(10, ge=1, le=100),
+) -> PaginatedTasks:
+    """
+    Retrieve all tasks for the currently authenticated user.
+
+    Returns a list of tasks that belong to the user identified by the
+    access token and particular project. Requires authentication.
+
+    Args:
+        current_user (User): The currently authenticated user.
+        db (Session): The database session dependency.
+
+    Returns:
+        List[Task]: A list of tasks owned by the authenticated user.
+    """
+    tasks = get_user_tasks_list(db, current_user.id, project_id, page, size)
+    base_query = db.query(TaskModel).filter(TaskModel.owner_id == current_user.id)
+    total, pages, offset = paginate_query(base_query, page, size)
+
+    return PaginatedTasks(
+        total=total,
+        pages=pages,
+        page=page,
+        size=size,
+        offset=offset,
+        tasks=list(tasks),
+        has_next=page < pages,
+        has_prev=page > 1,
+    )
+
+
+@router.get(
+    "/projects/{project_id}/tasks/{task_id}/",
+    dependencies=[Depends(verify_user_in_project_or_admin)],
+)
+def get_user_task(
+    project_id: int,
+    task_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> Task:
+    """
+    Retrieve details of a specific task belonging to the authenticated user
+    and particular project.
+
+    Fetches and returns information about a single task, identified by its ID,
+    if it belongs to the currently authenticated user. Requires authentication.
+
+    Args:
+        task_id (int): The ID of the task to retrieve.
+        current_user (User): The currently authenticated user.
+        db (Session): The database session dependency.
+
+    Returns:
+        Task: The task data mapped to a response schema.
+
+    Raises:
+        HTTPException:
+            - 404 if the task is not found or does not belong to the user.
+    """
+    task = get_user_task_detail(db, current_user.id, task_id, project_id)
+    return Task.from_orm(task)
+
+
+@router.post(
+    "/projects/{project_id}/tasks/",
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(verify_user_in_project_or_admin)],
+)
+def create_user_task(
+    project_id: int,
+    task_form: TaskCreate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> Task:
+    """
+    Create a new task for the currently authenticated user and particular project.
+
+    Accepts task input data and creates a new task associated with the user.
+    Returns the created task. Requires authentication.
+
+    Args:
+        task_form (TaskCreate): The data required to create a new task.
+        current_user (User): The currently authenticated user.
+        db (Session): The database session dependency.
+
+    Returns:
+        Task: The newly created task.
+
+    Raises:
+        HTTPException:
+            - 400 if a database integrity error occurs during task creation.
+    """
+    try:
+        task = create_task(db, task_form, current_user.id, project_id)
+    except IntegrityError as e:
+        raise HTTPException(status_code=400, detail=e.statement)
+    return Task.from_orm(task)
+
+
+@router.put(
+    "/projects/{project_id}/tasks/{task_id}/",
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(verify_user_in_project_or_admin)],
+)
+def update_user_task(
+    project_id: int,
+    task_id: int,
+    task_form: TaskCreate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+) -> TaskCreate:
+    """
+    Update an existing task for the currently authenticated user
+    and particular project.
+
+    Updates the task with the provided ID using the new data from the user.
+    The task must belong to the currently authenticated user. Requires authentication.
+
+    Args:
+        task_id (int): The ID of the task to be updated.
+        task_form (TaskCreate): The updated task data.
+        current_user (User): The currently authenticated user.
+        db (Session): The database session dependency.
+
+    Returns:
+        TaskCreate: The updated task data.
+
+    Raises:
+        HTTPException:
+            - 404 if the task is not found or does not belong to the user.
+    """
+
+    task = update_task(db, task_form, task_id, current_user.id, project_id)
+    return Task.from_orm(task)
+
+
+@router.delete(
+    "/projects/{project_id}/tasks/{task_id}/",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(verify_user_in_project_or_admin)],
+)
+def delete_user_task(
+    project_id: int,
+    task_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
 ):
-    if current_user.role.name != "admin":
-        raise PermissionError("User is not allowed to delete projects")
-    delete_project(db, project_id)
+    """
+    Delete a task belonging to the currently authenticated user and
+    particular project.
+
+    Removes the task with the given ID if it exists and belongs to the user.
+    Requires authentication.
+
+    Args:
+        task_id (int): The ID of the task to be deleted.
+        current_user (User): The currently authenticated user.
+        db (Session): The database session dependency.
+
+    Returns:
+        None
+
+    Raises:
+        HTTPException:
+            - 404 if the task is not found or does not belong to the user.
+    """
+
+    delete_task(db, task_id, current_user.id, project_id)
+
+
+@router.post("/{project_id}/members")
+def add_member_to_project(
+    project_id: int,
+    payload: AddMemberInput,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    ensure_user_is_admin(current_user)
+    return add_user_to_project(db, project_id, payload.user_id)

@@ -16,3 +16,7 @@ class ProjectInfo(BaseModel):
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class AddMemberInput(BaseModel):
+    user_id: int

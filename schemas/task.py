@@ -25,7 +25,6 @@ class TaskCreate(BaseModel):
     title: str
     description: Optional[str] = None
     status: TaskStatus
-    project_id: int
     priority: Optional[TaskPriority] = None
     due_date: Optional[datetime] = None
 

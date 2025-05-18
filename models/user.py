@@ -24,3 +24,4 @@ class User(Base):
     )
     tags: Mapped[List["Tag"]] = relationship(back_populates="owner")
     projects = relationship("ProjectMember", back_populates="user")
+    role = relationship("Role", back_populates="users")
