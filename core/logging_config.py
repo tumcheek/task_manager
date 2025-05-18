@@ -1,5 +1,4 @@
 import os
-from logging.config import dictConfig
 
 os.makedirs("logs", exist_ok=True)
 

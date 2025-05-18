@@ -25,3 +25,11 @@ class TagNotAssociatedError(Exception):
         super().__init__(
             f"Tag with ID {tag_id} is not associated with task with ID {task_id}"
         )
+
+
+class ProjectNotFoundError(Exception):
+    """Exception raised when a task is not found."""
+
+    def __init__(self, project_id: int):
+        self.task_id = project_id
+        super().__init__(f"Project with ID {project_id} not found")

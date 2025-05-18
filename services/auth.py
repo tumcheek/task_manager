@@ -1,14 +1,14 @@
 from pydantic import EmailStr
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, NoResultFound
+from sqlalchemy.orm import Session
 
-from core.database import SESSION
 from core.security import get_password_hash, verify_password
 from models import User
 from schemas.user import UserCreate
 
 
-def create_user(db: SESSION, user_info: UserCreate) -> User:
+def create_user(db: Session, user_info: UserCreate) -> User:
     hashed_password = get_password_hash(user_info.password)
     user_data = user_info.dict()
     user_data["password"] = hashed_password
@@ -26,7 +26,7 @@ def create_user(db: SESSION, user_info: UserCreate) -> User:
     return user
 
 
-def get_user(db: SESSION, email: EmailStr):
+def get_user(db: Session, email: EmailStr):
     stmt = select(User).where(User.email == email)
     try:
         user = db.scalars(stmt).one()
@@ -35,7 +35,7 @@ def get_user(db: SESSION, email: EmailStr):
     return user
 
 
-def authenticate_user(db: SESSION, email: EmailStr, password: str):
+def authenticate_user(db: Session, email: EmailStr, password: str):
     user = get_user(db, email)
     if not user:
         return False

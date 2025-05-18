@@ -7,7 +7,6 @@ from models.task import TaskStatus, TaskPriority
 
 
 class Task(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
     id: int
     title: str
     description: str
@@ -15,17 +14,22 @@ class Task(BaseModel):
     priority: str | None
     owner_id: int
     due_date: datetime | None
+    project_id: int
     created_at: datetime
     updated_at: datetime
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 class TaskCreate(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
     title: str
     description: Optional[str] = None
     status: TaskStatus
+    project_id: int
     priority: Optional[TaskPriority] = None
     due_date: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class PaginatedTasks(BaseModel):

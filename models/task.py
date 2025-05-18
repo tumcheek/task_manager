@@ -1,7 +1,7 @@
 from datetime import datetime
 import enum
 
-from sqlalchemy.orm import mapped_column, Mapped, relationship
+from sqlalchemy.orm import mapped_column, Mapped, relationship, validates
 from sqlalchemy import String, Enum, DateTime, ForeignKey
 
 from models.base import Base
@@ -37,10 +37,29 @@ class Task(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.now, onupdate=datetime.now
     )
-
-    owner: Mapped["User"] = relationship(back_populates="tasks")
+    assignee_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        default=None,
+    )
+    project_id: Mapped[int] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
+    )
+    owner: Mapped["User"] = relationship(
+        back_populates="owned_tasks", foreign_keys="Task.owner_id"
+    )
+    assignee: Mapped["User"] = relationship(
+        back_populates="assigned_tasks", foreign_keys="Task.assignee_id"
+    )
     tags: Mapped[list["Tag"]] = relationship(
         secondary=task_tag_association_table,
         back_populates="tasks",
         cascade="all, delete",
     )
+    project: Mapped["Project"] = relationship(back_populates="tasks")
+
+    @validates("assignee")
+    def validate_assignee(self, key, assignee):
+        if assignee not in self.project.members:
+            raise ValueError("Assignee must be a member of the project")
+        return assignee
