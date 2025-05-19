@@ -2,8 +2,7 @@ from fastapi import Path, Depends
 from sqlalchemy.orm import Session
 
 from core import get_current_user, get_db
-from exeptions.admin import AdminAccessRequired
-from exeptions.projects import ProjectPermissionError
+from exeptions import AdminAccessRequired, ProjectPermissionError
 from models import ProjectMember, User
 
 

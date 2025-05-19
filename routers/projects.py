@@ -23,11 +23,11 @@ from services.projects import (
 
 from utils import paginate_query
 from services.tasks import (
-    get_user_tasks_list,
+    get_user_owned_tasks_list,
     create_task,
     update_task,
     delete_task,
-    get_user_task_detail,
+    get_project_task_detail, get_user_assigned_tasks_list,
 )
 from schemas.task import TaskCreate, Task, PaginatedTasks
 from models import Task as TaskModel
@@ -95,10 +95,10 @@ def remove_project(
 
 
 @router.get(
-    "/projects/{project_id}/tasks/",
+    "/projects/{project_id}/tasks/owned/",
     dependencies=[Depends(verify_user_in_project_or_admin)],
 )
-def get_user_tasks(
+def get_user_owned_tasks(
     project_id: int,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Session = Depends(get_db),
@@ -118,7 +118,47 @@ def get_user_tasks(
     Returns:
         List[Task]: A list of tasks owned by the authenticated user.
     """
-    tasks = get_user_tasks_list(db, current_user.id, project_id, page, size)
+    tasks = get_user_owned_tasks_list(db, current_user.id, project_id, page, size)
+    base_query = db.query(TaskModel).filter(TaskModel.owner_id == current_user.id)
+    total, pages, offset = paginate_query(base_query, page, size)
+
+    return PaginatedTasks(
+        total=total,
+        pages=pages,
+        page=page,
+        size=size,
+        offset=offset,
+        tasks=list(tasks),
+        has_next=page < pages,
+        has_prev=page > 1,
+    )
+
+
+@router.get(
+    "/projects/{project_id}/tasks/assigned/",
+    dependencies=[Depends(verify_user_in_project_or_admin)],
+)
+def get_user_assigned_tasks(
+    project_id: int,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Session = Depends(get_db),
+    page: int = Query(1, ge=1),
+    size: int = Query(10, ge=1, le=100),
+) -> PaginatedTasks:
+    """
+    Retrieve all assigned tasks for the currently authenticated user.
+
+    Returns a list of tasks that belong to the user identified by the
+    access token and particular project. Requires authentication.
+
+    Args:
+        current_user (User): The currently authenticated user.
+        db (Session): The database session dependency.
+
+    Returns:
+        List[Task]: A list of tasks owned by the authenticated user.
+    """
+    tasks = get_user_assigned_tasks_list(db, current_user.id, project_id, page, size)
     base_query = db.query(TaskModel).filter(TaskModel.owner_id == current_user.id)
     total, pages, offset = paginate_query(base_query, page, size)
 
@@ -136,12 +176,11 @@ def get_user_tasks(
 
 @router.get(
     "/projects/{project_id}/tasks/{task_id}/",
-    dependencies=[Depends(verify_user_in_project_or_admin)],
+    dependencies=[Depends(verify_user_in_project_or_admin), Depends(get_current_user)],
 )
-def get_user_task(
+def get_project_task(
     project_id: int,
     task_id: int,
-    current_user: Annotated[User, Depends(get_current_user)],
     db: Session = Depends(get_db),
 ) -> Task:
     """
@@ -163,7 +202,7 @@ def get_user_task(
         HTTPException:
             - 404 if the task is not found or does not belong to the user.
     """
-    task = get_user_task_detail(db, current_user.id, task_id, project_id)
+    task = get_project_task_detail(db, task_id, project_id)
     return Task.from_orm(task)
 
 
@@ -172,7 +211,7 @@ def get_user_task(
     status_code=status.HTTP_201_CREATED,
     dependencies=[Depends(verify_user_in_project_or_admin)],
 )
-def create_user_task(
+def create_project_task(
     project_id: int,
     task_form: TaskCreate,
     current_user: Annotated[User, Depends(get_current_user)],
@@ -208,7 +247,7 @@ def create_user_task(
     status_code=status.HTTP_200_OK,
     dependencies=[Depends(verify_user_in_project_or_admin)],
 )
-def update_user_task(
+def update_project_task(
     project_id: int,
     task_id: int,
     task_form: TaskCreate,
@@ -236,7 +275,10 @@ def update_user_task(
             - 404 if the task is not found or does not belong to the user.
     """
 
-    task = update_task(db, task_form, task_id, current_user.id, project_id)
+    if current_user.role.name != 'admin':
+        task = update_task(db, task_form, task_id, project_id, current_user.id)
+    else:
+        task = update_task(db, task_form, task_id, project_id)
     return Task.from_orm(task)
 
 
@@ -270,8 +312,10 @@ def delete_user_task(
         HTTPException:
             - 404 if the task is not found or does not belong to the user.
     """
-
-    delete_task(db, task_id, current_user.id, project_id)
+    if current_user.role.name != 'admin':
+        delete_task(db, task_id, project_id, current_user.id)
+    else:
+        delete_task(db, task_id, project_id)
 
 
 @router.post("/{project_id}/members")

@@ -11,6 +11,9 @@ from exception_handlers import (
     tag_not_found_exception_handler,
     tag_not_associated_error_handler,
     tag_already_exists_error_handler,
+    project_not_found_exception_handler,
+    project_permission_exception_handler,
+    admin_access_required,
 )
 from middleware import LoggingMiddleware, profile_request
 from routers import auth, tasks, tags, projects
@@ -20,6 +23,9 @@ from exeptions import (
     TagNotFoundError,
     TagNotAssociatedError,
     TagAlreadyExistsError,
+    ProjectPermissionError,
+    ProjectNotFoundError,
+    AdminAccessRequired,
 )
 import sentry_sdk
 
@@ -53,6 +59,10 @@ app.add_exception_handler(TaskNotFoundError, task_not_found_exception_handler)
 app.add_exception_handler(TagNotFoundError, tag_not_found_exception_handler)
 app.add_exception_handler(TagNotAssociatedError, tag_not_associated_error_handler)
 app.add_exception_handler(TagAlreadyExistsError, tag_already_exists_error_handler)
+app.add_exception_handler(ProjectPermissionError, project_permission_exception_handler)
+app.add_exception_handler(ProjectNotFoundError, project_not_found_exception_handler)
+app.add_exception_handler(AdminAccessRequired, admin_access_required)
+
 
 app.add_middleware(LoggingMiddleware)
 
