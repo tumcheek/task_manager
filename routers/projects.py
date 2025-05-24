@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -10,7 +10,8 @@ from dependencies.permissions import (
     verify_user_in_project_or_admin,
 )
 
-from models import User
+from models import User, Project
+from schemas.pagination import PaginatedResponse, PaginationParams
 from schemas.projects import ProjectCreate, ProjectInfo, AddMemberInput
 from services.projects import (
     create_project,
@@ -21,15 +22,14 @@ from services.projects import (
     add_user_to_project,
 )
 
-from utils import paginate_query
 from services.tasks import (
-    get_user_owned_tasks_list,
+    get_user_project_tasks_list,
     create_task,
     update_task,
     delete_task,
-    get_project_task_detail, get_user_assigned_tasks_list,
+    get_project_task_detail
 )
-from schemas.task import TaskCreate, Task, PaginatedTasks
+from schemas.task import TaskCreate, Task, TaskFilterParams
 from models import Task as TaskModel
 
 router = APIRouter(tags=["projects"])
@@ -59,14 +59,23 @@ def list_user_projects(
 
 @router.get(
     "/projects/",
-    response_model=list[ProjectInfo],
+    response_model=PaginatedResponse[ProjectInfo],
     dependencies=[Depends(ensure_user_is_admin)],
 )
 def list_all_projects(
     db: Session = Depends(get_db),
+    pagination: PaginationParams = Depends(),
 ):
-    projects = get_all_projects(db)
-    return projects
+    offset = (pagination.page - 1) * pagination.page_size
+    projects = get_all_projects(db, offset, pagination.page_size)
+    base_query = db.query(Project).all()
+    total = base_query.count(Project)
+    return PaginatedResponse.create(
+        items=projects,
+        total=total,
+        page=pagination.page,
+        page_size=pagination.page_size
+    )
 
 
 @router.put(
@@ -95,82 +104,41 @@ def remove_project(
 
 
 @router.get(
-    "/projects/{project_id}/tasks/owned/",
+    "/projects/{project_id}/tasks/",
     dependencies=[Depends(verify_user_in_project_or_admin)],
 )
-def get_user_owned_tasks(
+def get_user_project_tasks(
     project_id: int,
     current_user: Annotated[User, Depends(get_current_user)],
     db: Session = Depends(get_db),
-    page: int = Query(1, ge=1),
-    size: int = Query(10, ge=1, le=100),
-) -> PaginatedTasks:
+    pagination: PaginationParams = Depends(),
+    filters: TaskFilterParams = Depends()
+) -> PaginatedResponse[Task]:
     """
-    Retrieve all tasks for the currently authenticated user.
+    Retrieve all project tasks for the currently authenticated user.
 
     Returns a list of tasks that belong to the user identified by the
     access token and particular project. Requires authentication.
 
     Args:
+        project_id (int): The project ID.
         current_user (User): The currently authenticated user.
         db (Session): The database session dependency.
+        pagination (PaginationParams): A pagination params object.
+        filters (TaskFilterParams): A filters object.
 
     Returns:
-        List[Task]: A list of tasks owned by the authenticated user.
+        PaginatedResponse[Task]: A paginated list of user's owned tasks.
     """
-    tasks = get_user_owned_tasks_list(db, current_user.id, project_id, page, size)
-    base_query = db.query(TaskModel).filter(TaskModel.owner_id == current_user.id)
-    total, pages, offset = paginate_query(base_query, page, size)
+    offset = (pagination.page - 1) * pagination.page_size
+    tasks, total = get_user_project_tasks_list(db, current_user.id, project_id, filters,
+                                               offset, pagination.page_size)
 
-    return PaginatedTasks(
+    return PaginatedResponse.create(
+        items=tasks,
         total=total,
-        pages=pages,
-        page=page,
-        size=size,
-        offset=offset,
-        tasks=list(tasks),
-        has_next=page < pages,
-        has_prev=page > 1,
-    )
-
-
-@router.get(
-    "/projects/{project_id}/tasks/assigned/",
-    dependencies=[Depends(verify_user_in_project_or_admin)],
-)
-def get_user_assigned_tasks(
-    project_id: int,
-    current_user: Annotated[User, Depends(get_current_user)],
-    db: Session = Depends(get_db),
-    page: int = Query(1, ge=1),
-    size: int = Query(10, ge=1, le=100),
-) -> PaginatedTasks:
-    """
-    Retrieve all assigned tasks for the currently authenticated user.
-
-    Returns a list of tasks that belong to the user identified by the
-    access token and particular project. Requires authentication.
-
-    Args:
-        current_user (User): The currently authenticated user.
-        db (Session): The database session dependency.
-
-    Returns:
-        List[Task]: A list of tasks owned by the authenticated user.
-    """
-    tasks = get_user_assigned_tasks_list(db, current_user.id, project_id, page, size)
-    base_query = db.query(TaskModel).filter(TaskModel.owner_id == current_user.id)
-    total, pages, offset = paginate_query(base_query, page, size)
-
-    return PaginatedTasks(
-        total=total,
-        pages=pages,
-        page=page,
-        size=size,
-        offset=offset,
-        tasks=list(tasks),
-        has_next=page < pages,
-        has_prev=page > 1,
+        page=pagination.page,
+        page_size=pagination.page_size
     )
 
 

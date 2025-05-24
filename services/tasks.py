@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Tuple
 
+from sqlalchemy import desc, asc
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -7,42 +8,36 @@ from dependencies.permissions import ensure_user_is_project_member_or_raise
 from exeptions import TaskNotFoundError
 from models import Task
 
-from schemas.task import TaskCreate
+from schemas.task import TaskCreate, TaskFilterParams, TaskRole, SortOrder
 from utils import get_project_task
 
 
-def get_user_owned_tasks_list(
+def get_user_project_tasks_list(
     db: Session,
     user_id: int,
     project_id: int,
+    filters: TaskFilterParams,
     offset: int = 0,
     limit: int = 5,
-) -> List[Task]:
-    tasks = (
-        db.query(Task)
-        .filter(Task.owner_id == user_id, Task.project_id == project_id)
-        .offset(offset)
-        .limit(limit)
-        .all()
-    )
-    return tasks
+) -> Tuple[List[Task], int]:
 
+    if filters.role == TaskRole.ASSIGNEE:
+        query = db.query(Task).filter(Task.assignee_id == user_id, Task.project_id == project_id)
+    else:
+        query = db.query(Task).filter(Task.owner_id == user_id, Task.project_id == project_id)
 
-def get_user_assigned_tasks_list(
-    db: Session,
-    user_id: int,
-    project_id: int,
-    offset: int = 0,
-    limit: int = 5,
-) -> List[Task]:
-    tasks = (
-        db.query(Task)
-        .filter(Task.assignee_id == user_id, Task.project_id == project_id)
-        .offset(offset)
-        .limit(limit)
-        .all()
-    )
-    return tasks
+    filter_data = filters.dict(exclude_unset=True, exclude_none=True, exclude={"sort_by", "sort_order", "role"})
+    for field_name, value in filter_data.items():
+        if hasattr(Task, field_name):
+            query = query.filter(getattr(Task, field_name) == value)
+
+    sort_column = getattr(Task, filters.sort_by)
+    sort_direction = desc if filters.sort_order == SortOrder.DESC else asc
+    query = query.order_by(sort_direction(sort_column))
+    total = query.count()
+    print("*******")
+    print(offset)
+    return query.offset(offset).limit(limit).all(), total
 
 
 def get_project_task_detail(

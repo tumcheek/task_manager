@@ -37,8 +37,8 @@ def get_user_projects(db: Session, user_id: int) -> list[Type[Project]]:
     return db.execute(stmt).scalars().all()
 
 
-def get_all_projects(db: Session) -> list[Type[Project]]:
-    projects = db.query(Project).all()
+def get_all_projects(db: Session, offset: int = 0, limit: int = 5,) -> list[Type[Project]]:
+    projects = db.query(Project).limit(limit).offset(offset).all()
     return projects
 
 

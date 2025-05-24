@@ -16,7 +16,7 @@ from exception_handlers import (
     admin_access_required,
 )
 from middleware import LoggingMiddleware, profile_request
-from routers import auth, tasks, tags, projects
+from routers import auth, tags, projects
 from seeds import seed_roles
 from exeptions import (
     TaskNotFoundError,
@@ -44,7 +44,6 @@ dictConfig(LOGGING_CONFIG)
 
 api_router = APIRouter()
 api_router.include_router(auth.router)
-api_router.include_router(tasks.router)
 api_router.include_router(tags.router)
 api_router.include_router(projects.router)
 
