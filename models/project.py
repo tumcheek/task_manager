@@ -16,14 +16,14 @@ class Project(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime, default=datetime.now, onupdate=datetime.now
     )
-    tasks = relationship("Task", back_populates="project")
-    members = relationship("ProjectMember", back_populates="project")
+    tasks = relationship("Task", back_populates="project", cascade="all, delete-orphan")
+    members = relationship("ProjectMember", back_populates="project", cascade="all, delete-orphan")
 
 
 class ProjectMember(Base):
     __tablename__ = "project_members"
-    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id"), primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), primary_key=True)
 
     user: Mapped["User"] = relationship(back_populates="projects")
     project: Mapped["Project"] = relationship(back_populates="members")

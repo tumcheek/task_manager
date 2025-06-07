@@ -35,8 +35,6 @@ def get_user_project_tasks_list(
     sort_direction = desc if filters.sort_order == SortOrder.DESC else asc
     query = query.order_by(sort_direction(sort_column))
     total = query.count()
-    print("*******")
-    print(offset)
     return query.offset(offset).limit(limit).all(), total
 
 
@@ -82,10 +80,12 @@ def update_task(
 ) -> Task | None:
     task_data = task_info.dict()
     if user_id is not None:
-        task = get_project_task(db, task_id, project_id, owner_id=user_id)
+        get_project_task(db, task_id, project_id, owner_id=user_id)
     else:
-        task = get_project_task(db, task_id, project_id)
-    task.update(task_data)
+        get_project_task(db, task_id, project_id)
+
+    query = db.query(Task).filter(Task.id == task_id, Task.project_id == project_id)
+    query.update(task_data)
     db.commit()
     updated_task = db.query(Task).filter(Task.id == task_id).first()
     return updated_task
@@ -93,10 +93,10 @@ def update_task(
 
 def delete_task(db: Session, task_id: int, project_id: int, user_id: int | None = None) -> None:
     if user_id is not None:
-        task = get_project_task(db, task_id, project_id, owner_id=user_id)
+        get_project_task(db, task_id, project_id, owner_id=user_id)
     else:
-        task = get_project_task(db, task_id, project_id)
-    task.delete()
+        get_project_task(db, task_id, project_id)
+    db.query(Task).filter_by(id=task_id, project_id=project_id).delete()
     db.commit()
 
 

@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from models import Project, ProjectMember
+from models import Project, ProjectMember, User
 from schemas.projects import ProjectCreate
 from exeptions import ProjectNotFoundError
 
@@ -72,6 +72,9 @@ def add_user_to_project(db: Session, project_id: int, user_id: int):
         .filter_by(project_id=project_id, user_id=user_id)
         .first()
     )
+    user_exits = db.query(User).filter_by(id=user_id).first()
+    if not user_exits:
+        raise HTTPException(status_code=404, detail="User with this ID does not exist.")
     if exists:
         raise HTTPException(status_code=400, detail="User is already a member")
 

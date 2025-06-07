@@ -30,7 +30,6 @@ from services.tasks import (
     get_project_task_detail
 )
 from schemas.task import TaskCreate, Task, TaskFilterParams
-from models import Task as TaskModel
 
 router = APIRouter(tags=["projects"])
 
@@ -68,8 +67,8 @@ def list_all_projects(
 ):
     offset = (pagination.page - 1) * pagination.page_size
     projects = get_all_projects(db, offset, pagination.page_size)
-    base_query = db.query(Project).all()
-    total = base_query.count(Project)
+    base_query = db.query(Project)
+    total = base_query.count()
     return PaginatedResponse.create(
         items=projects,
         total=total,
@@ -101,6 +100,15 @@ def remove_project(
     db: Session = Depends(get_db),
 ):
     delete_project(db, project_id)
+
+@router.post("/projects/{project_id}/members", status_code=status.HTTP_201_CREATED, dependencies=[Depends(ensure_user_is_admin)])
+def add_member_to_project(
+    project_id: int,
+    payload: AddMemberInput,
+    db: Session = Depends(get_db),
+):
+    add_user_to_project(db, project_id, payload.user_id)
+    return payload
 
 
 @router.get(
@@ -285,13 +293,3 @@ def delete_user_task(
     else:
         delete_task(db, task_id, project_id)
 
-
-@router.post("/{project_id}/members")
-def add_member_to_project(
-    project_id: int,
-    payload: AddMemberInput,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    ensure_user_is_admin(current_user)
-    return add_user_to_project(db, project_id, payload.user_id)

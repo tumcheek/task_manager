@@ -14,6 +14,7 @@ class Task(BaseModel):
     status: str
     priority: str | None
     owner_id: int
+    assignee_id: int | None
     due_date: datetime | None
     project_id: int
     created_at: datetime
